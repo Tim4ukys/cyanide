@@ -68,12 +68,6 @@ using method_to_func_t = typename method_to_func<T>::type;
 
 // ----------------------------------------------------------------------------
 
-template <typename T>
-using result_type_t = typename decltype(std::function{
-    std::declval<T>()})::result_type;
-
-// ----------------------------------------------------------------------------
-
 template <typename>
 struct function_decompose {};
 
@@ -84,6 +78,14 @@ struct function_decompose<Ret (*)(Args...)> {
     using arguments   = std::tuple<Args...>;
 };
 
+template <typename Ret, typename... Args>
+struct function_decompose<Ret (__stdcall *)(Args...)>
+    : function_decompose<Ret (*)(Args...)> {};
+
+template <typename Ret, typename... Args>
+struct function_decompose<Ret (__thiscall *)(Args...)>
+    : function_decompose<Ret (*)(Args...)> {};
+
 template <typename Ret, typename Class, typename... Args>
 struct function_decompose<Ret (Class::*)(Args...)>
     : function_decompose<Ret (*)(Args...)> {};
@@ -92,8 +94,17 @@ template <typename Ret, typename Class, typename... Args>
 struct function_decompose<Ret (Class::*)(Args...) const>
     : function_decompose<Ret (Class::*)(Args...)> {};
 
+template <typename Ret, typename... Args>
+struct function_decompose<Ret (__fastcall *)(Args...)>
+    : function_decompose<Ret (*)(Args...)> {};
+
 template <Functor F>
 struct function_decompose<F> : function_decompose<decltype(&F::operator())> {};
+
+// ----------------------------------------------------------------------------
+
+template <typename T>
+using result_type_t = typename function_decompose<T>::return_type;
 
 } // namespace cyanide::types
 
