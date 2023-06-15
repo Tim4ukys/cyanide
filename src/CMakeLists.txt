@@ -3,9 +3,9 @@ add_library(cyanide::cyanide ALIAS cyanide)
 
 set_property(TARGET ${PROJECT_NAME}
 				PROPERTY 
-					CXX_STANDARD 23
 					MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 )
+target_compile_features(cyanide PUBLIC cxx_std_23)
 target_include_directories(cyanide PUBLIC
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
