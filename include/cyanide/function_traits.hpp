@@ -68,14 +68,6 @@ using method_to_func_t = typename method_to_func<T>::type;
 
 // ----------------------------------------------------------------------------
 
-template <typename T>
-using result_type_t = typename decltype(std::function{
-    std::declval<T>()})::result_type;
-
-// ----------------------------------------------------------------------------
-
-// https://github.com/allwanttokissme/Yet-another-hook-library/blob/7b01b8d8a8473ae49713d7a9663b70baae50dcce/hook_function_traits.hpp#L146
-// https://stackoverflow.com/q/65722989/8289462
 template <typename>
 struct function_decompose {};
 
@@ -86,6 +78,14 @@ struct function_decompose<Ret (*)(Args...)> {
     using arguments   = std::tuple<Args...>;
 };
 
+template <typename Ret, typename... Args>
+struct function_decompose<Ret (__stdcall *)(Args...)>
+    : function_decompose<Ret (*)(Args...)> {};
+
+template <typename Ret, typename... Args>
+struct function_decompose<Ret (__thiscall *)(Args...)>
+    : function_decompose<Ret (*)(Args...)> {};
+
 template <typename Ret, typename Class, typename... Args>
 struct function_decompose<Ret (Class::*)(Args...)>
     : function_decompose<Ret (*)(Args...)> {};
@@ -94,8 +94,17 @@ template <typename Ret, typename Class, typename... Args>
 struct function_decompose<Ret (Class::*)(Args...) const>
     : function_decompose<Ret (Class::*)(Args...)> {};
 
+template <typename Ret, typename... Args>
+struct function_decompose<Ret (__fastcall *)(Args...)>
+    : function_decompose<Ret (*)(Args...)> {};
+
 template <Functor F>
 struct function_decompose<F> : function_decompose<decltype(&F::operator())> {};
+
+// ----------------------------------------------------------------------------
+
+template <typename T>
+using result_type_t = typename function_decompose<T>::return_type;
 
 } // namespace cyanide::types
 
